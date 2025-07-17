@@ -9,7 +9,7 @@ conda activate coco
 ```
 
 ```
-conda install pandas scikit-learn numpy
+conda install pandas scikit-learn numpy matplotlib
 ```
 
 ## yaml
