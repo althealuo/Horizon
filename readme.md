@@ -12,6 +12,10 @@ conda activate coco
 conda install pandas scikit-learn
 ```
 
+to run `Horizon_DL`
+
+- install cuda toolkit 12.6 then run `cuda_test`
+
 ## yaml
 
 create new yaml
