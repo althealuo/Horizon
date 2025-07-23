@@ -1,7 +1,7 @@
 # env setup
 
 ```
-conda create -n coco python=3.9
+conda create -n coco python=3.10
 ```
 
 ```
@@ -9,7 +9,7 @@ conda activate coco
 ```
 
 ```
-conda install pandas scikit-learn
+conda install pandas scikit-learn numpy matplotlib
 ```
 
 to run `Horizon_DL`
