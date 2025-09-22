@@ -69,3 +69,20 @@ exp_online_0919.csv
 
 my_horizon_data_0919.csv
 
+
+
+# 2025/9/22
+
+(turns out before there were duplicated subject ids)
+
+(TMS also needs to be handled differently, so exp_all excludes TMS)
+
+### preprocessed data
+
+exp_all.csv
+
+exp_TMS.csv
+
+### used data
+
+my_horizon_data_all.csv
