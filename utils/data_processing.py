@@ -55,8 +55,8 @@ def get_dataloaders(X_seq, X_static, y, SEQ_LEN=2, BATCH_SIZE=32, TIME_STEPS=4):
     y_train_tensor = torch.tensor(y_train.to_numpy(), dtype=torch.long) # pandas series to tensor
     y_test_tensor = torch.tensor(y_test.to_numpy(), dtype=torch.long)
 
-    train_loader = DataLoader(TensorDataset(X_seq_train_tensor, X_static_train_tensor, y_train_tensor), batch_size=32, shuffle=True)
-    test_loader = DataLoader(TensorDataset(X_seq_test_tensor, X_static_test_tensor, y_test_tensor), batch_size=32, shuffle=False)
+    train_loader = DataLoader(TensorDataset(X_seq_train_tensor, X_static_train_tensor, y_train_tensor), batch_size=BATCH_SIZE, shuffle=True)
+    test_loader = DataLoader(TensorDataset(X_seq_test_tensor, X_static_test_tensor, y_test_tensor), batch_size=BATCH_SIZE, shuffle=False)
 
     h1_mask_bool = torch.tensor(h1_mask.to_numpy(), dtype=torch.bool)
     h6_mask_bool = torch.tensor(h6_mask.to_numpy(), dtype=torch.bool)
@@ -71,8 +71,8 @@ def get_dataloaders(X_seq, X_static, y, SEQ_LEN=2, BATCH_SIZE=32, TIME_STEPS=4):
     y_test_h6 = y_test_tensor[h6_mask_bool]
 
     
-    test_loader_h1 = DataLoader(TensorDataset(X_seq_test_h1, X_static_test_h1, y_test_h1), batch_size=32, shuffle=False)
-    test_loader_h6 = DataLoader(TensorDataset(X_seq_test_h6, X_static_test_h6, y_test_h6), batch_size=32, shuffle=False)
+    test_loader_h1 = DataLoader(TensorDataset(X_seq_test_h1, X_static_test_h1, y_test_h1), batch_size=BATCH_SIZE, shuffle=False)
+    test_loader_h6 = DataLoader(TensorDataset(X_seq_test_h6, X_static_test_h6, y_test_h6), batch_size=BATCH_SIZE, shuffle=False)
 
     return train_loader, test_loader, test_loader_h1, test_loader_h6
 
