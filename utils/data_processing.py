@@ -76,6 +76,7 @@ def get_dataloaders(X_seq, X_static, y, SEQ_LEN=2, BATCH_SIZE=32, TIME_STEPS=4):
 
     return train_loader, test_loader, test_loader_h1, test_loader_h6
 
+
 def save_output(model_dict, filename="model_results"):
     dump_history = {}
 
