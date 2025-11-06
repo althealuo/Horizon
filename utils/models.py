@@ -1,6 +1,27 @@
 import torch
 import torch.nn as nn
 import numpy as np
+import random
+
+
+class MLP(nn.Module):
+    def __init__(self, input_size, output_size):
+        super(MLP, self).__init__()
+        self.fc1 = nn.Linear(input_size, 32)
+        self.fc2 = nn.Linear(32, 16)
+        self.output = nn.Linear(16, output_size)
+
+        self.relu = nn.ReLU()
+        self.gelu = nn.GELU()
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        x = self.fc1(x)
+        x = self.relu(x)
+        x = self.fc2(x)
+        x = self.gelu(x)
+        x = self.output(x)
+        return x
 
 class RNN(nn.Module):
     def __init__(self, seq_input_size, static_input_size=2, hidden_size=64, output_size=2):
@@ -181,3 +202,58 @@ class TinyAttentionNoProj(nn.Module):
         combined = torch.cat((x_final, static_x), dim=1)
         output = self.fc(combined)
         return output
+    
+class Seq2SeqGRU(nn.Module):
+    def __init__(self, seq_input_size, static_input_size=2, hidden_size=64, 
+                 output_size=2, max_out_len=6, pad_idx=-100):
+        super(Seq2SeqGRU, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.max_out_len = max_out_len
+        self.pad_idx = pad_idx
+        self.output_size = output_size
+
+        self.encoder = nn.GRU(seq_input_size, hidden_size, batch_first=True)
+
+        # encoder hidden + static
+        self.fc_static = nn.Linear(hidden_size + static_input_size, hidden_size)
+
+        # Decoder: input = one-hot choice vector (dim = output_size)
+        self.decoder = nn.GRU(output_size, hidden_size, batch_first=True)
+
+        self.out = nn.Linear(hidden_size, output_size)
+
+
+    def forward(self, seq_x, static_x, targets=None, teacher_forcing_ratio=1.0):
+        # --- Encode ---
+        _, h_n = self.encoder(seq_x)        # h_n: [1, B, hidden]
+        h_n = h_n.squeeze(0)                # [B, hidden]
+        combined = torch.cat((h_n, static_x), dim=1)
+        encoder_output = self.fc_static(combined).unsqueeze(0)  # [1, B, hidden]
+
+        # --- Decode ---
+        outputs = []
+        batch_size = seq_x.size(0)
+        device = seq_x.device
+
+        decoder_input = torch.zeros(batch_size, 1, self.output_size, device=device)  # start token (all zeros)
+        hidden = encoder_output
+
+        for t in range(self.max_out_len):
+            dec_out, hidden = self.decoder(decoder_input, hidden)  # dec_out: [B, 1, hidden]
+            logits = self.out(dec_out)                            # [B, 1, output_size]
+            outputs.append(logits)
+
+            # Teacher forcing toggle
+            use_teacher_forcing = (targets is not None) and (random.random() < teacher_forcing_ratio)
+            if use_teacher_forcing:
+                target_t = targets[:, t]                          # [B]
+                one_hot = torch.zeros(batch_size, self.output_size, device=device)
+                valid_mask = (target_t != self.pad_idx)
+                one_hot[valid_mask, target_t[valid_mask]] = 1.0
+                decoder_input = one_hot.unsqueeze(1)              # [B, 1, output_size]
+            else:
+                decoder_input = torch.softmax(logits, dim=-1)     # [B, 1, output_size]
+
+        outputs = torch.cat(outputs, dim=1)  # [B, max_out_len, output_size]
+        return outputs

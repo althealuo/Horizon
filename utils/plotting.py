@@ -7,7 +7,7 @@ import numpy as np
 # ============================================================
 
 # --- Shared color palette (color-blind friendly & print-safe) ---
-PLOT_COLORS = ["#6eb8f0", "#ff7e73", "#a0a0a0", "#4daea1", "#e6a95b", "#b58fe6"]
+PLOT_COLORS = ["#ff7e73", "#6eb8f0",  "#a0a0a0", "#4daea1", "#e6a95b", "#b58fe6"]
 
 # --- Global Seaborn Theme ---
 sns.set_theme(style="white", font="serif", context="paper", font_scale=1.1)
