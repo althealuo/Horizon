@@ -128,7 +128,7 @@ def plot_h6_stepwise(history, model_name="Seq2SeqGRU"):
     Plot stepwise accuracy for H6 (c4–c9) vs overall H1 accuracy
     in the same visual style as other paper-quality plots.
     """
-
+    PLOT_COLORS = ["#6eb8f0", "#ff7e73"]  # H6 line, H1 reference line
     # --- Data prep ---
     final_acc_h6 = history["h6_step_acc"][-1]   # e.g., [acc_c4,...,acc_c9]
     final_acc_h1 = history["h1_acc"][-1]        # single value
