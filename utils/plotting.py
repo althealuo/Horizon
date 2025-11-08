@@ -63,8 +63,8 @@ def plot_test_loss(model_dict):
     plt.tight_layout()
     plt.show()
 
-def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1_prog", col2="test_acc_h6_prog"):
-    """Plot mean ± std accuracy for H1 vs H6 across models."""
+def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1_prog", col2="test_acc_h6_prog", baseline=None):
+    """Plot mean ± std accuracy for H1 vs H6 across models, with optional baseline markers."""
     h1_means, h6_means = [], []
     h1_stds, h6_stds = [], []
 
@@ -89,16 +89,26 @@ def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1
     ax.errorbar(h6_means, y_pos + 0.1, xerr=h6_stds, fmt='o',
                 color=PLOT_COLORS[1], label="H6", capsize=3, linewidth=1.0)
 
+    # --- Baseline markers (if provided) ---
+    if baseline is not None and len(baseline) == 2:
+        h1_base, h6_base = baseline
+        ax.axvline(x=h1_base, color=PLOT_COLORS[0], linestyle="--", alpha=0.6, linewidth=1.2)
+        ax.axvline(x=h6_base, color=PLOT_COLORS[1], linestyle="--", alpha=0.6, linewidth=1.2)
+        # optional labels on top
+        ax.text(h1_base, y_pos[-1] + 0.7, f"H1 baseline={h1_base:.2f}", color=PLOT_COLORS[0],
+                fontsize=7, ha="center", va="bottom", alpha=0.8)
+        ax.text(h6_base, y_pos[-1] + 0.7, f"H6 baseline={h6_base:.2f}", color=PLOT_COLORS[1],
+                fontsize=7, ha="center", va="bottom", alpha=0.8)
+
     # --- Labels and Legend ---
     ax.set_title(f"{title}", **TITLE_FONT)
-    # ax.set_ylabel("Models", **LABEL_FONT)
     ax.set_xlabel(xlabel, **LABEL_FONT)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(names)
     ax.legend(
         prop={'family': 'sans-serif', 'size': 7},
-        loc='lower right',          # anchor the legend’s lower-right corner
-        bbox_to_anchor=(1.0, 1.0), # place just above the top-right corner
+        loc='lower right',
+        bbox_to_anchor=(1.0, 1.0),
         ncol=2,
         handletextpad=0.5,
         columnspacing=1.0
