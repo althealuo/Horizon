@@ -92,4 +92,90 @@ def save_output(model_dict, filename="model_results"):
     with open(f"{filename}.json", "w") as f:
         json.dump(dump_history, f)
         print(f"Saved model results to {filename}.json")
-        
+
+
+from scipy.stats import ttest_rel, sem
+# ---------------------------------------------------
+# 1. Helper: compute mean and 95% CI
+# ---------------------------------------------------
+def mean_ci(data, confidence=0.95):
+    """Return (mean, lower_CI, upper_CI) for a list or array."""
+    data = np.array(data)
+    m = np.mean(data)
+    s = sem(data)
+    h = 1.96 * s
+    return m, m - h, m + h
+
+
+# ---------------------------------------------------
+# 2. Extract final accuracy values for all models
+# ---------------------------------------------------
+def extract_final_metrics(combined_outputs):
+    """
+    combined_outputs: dict with model_name -> {metrics}
+    Returns a DataFrame with final_epoch accuracy for each model.
+    """
+    rows = []
+
+    for model_name, data in combined_outputs.items():
+        final_idx = data["final_epoch"] - 1
+
+        rows.append({
+            "model": model_name,
+            "acc_overall": data["test_acc_prog"][final_idx],
+            "acc_h1": data["test_acc_h1_prog"][final_idx],
+            "acc_h6": data["test_acc_h6_prog"][final_idx]
+        })
+
+    df = pd.DataFrame(rows)
+    return df
+
+
+# ---------------------------------------------------
+# 3. Compute stats (mean CI + paired t-test)
+# ---------------------------------------------------
+def compute_stats(df):
+    """
+    df: DataFrame from extract_final_metrics()
+
+    Returns:
+        stats_dict: dictionary of results
+        and prints clean summary text
+    """
+    h1_vals = df["acc_h1"].values
+    h6_vals = df["acc_h6"].values
+
+    # Mean ± CI
+    h1_mean, h1_low, h1_high = mean_ci(h1_vals)
+    h6_mean, h6_low, h6_high = mean_ci(h6_vals)
+
+    # Two-sided paired t-test
+    t_stat, p_two = ttest_rel(h1_vals, h6_vals)
+
+    # One-sided directional hypothesis: H1 > H6
+    if t_stat > 0:
+        p_one = p_two / 2
+    else:
+        p_one = 1 - p_two / 2
+
+    stats_dict = {
+        "h1_mean": h1_mean,
+        "h1_CI": (h1_low, h1_high),
+        "h6_mean": h6_mean,
+        "h6_CI": (h6_low, h6_high),
+        "t_stat": t_stat,
+        "p_two_sided": p_two,
+        "p_one_sided": p_one,
+        "model_count": len(df)
+    }
+
+    # Pretty print summary
+    print("\n===== Horizon Condition Accuracy Stats =====")
+    print(f"H1 mean accuracy = {h1_mean:.3f}  (95% CI [{h1_low:.3f}, {h1_high:.3f}])")
+    print(f"H6 mean accuracy = {h6_mean:.3f}  (95% CI [{h6_low:.3f}, {h6_high:.3f}])")
+    print("\nPaired t-test (H1 vs H6):")
+    print(f"  t = {t_stat:.3f},  two-sided p = {p_two:.5f}")
+    print(f"  One-sided p (H1 > H6) = {p_one:.5f}")
+    print("===========================================\n")
+
+    return stats_dict

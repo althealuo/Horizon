@@ -25,26 +25,31 @@ TICK_FONT_SIZE = 8
 #  Plotting Functions
 # ============================================================
 
-def plot_test_loss(model_dict):
-    """Plot test loss progression for each model."""
+def plot_loss(model_dict, title="Train Loss Progression"):
+    """Plot Train loss progression for each model."""
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
     # --- Plot each model’s loss curve ---
     for model_name, data in model_dict.items():
-        loss_prog = data["test_loss_prog"]
+        loss_prog = data["train_loss_prog"]
         final_epoch = data["final_epoch"]
         ax.plot(range(final_epoch), loss_prog, label=model_name, linewidth=1.2)
 
-    # --- Labels and Legend ---
+    # --- Title + Axis Labels ---
+    ax.set_title(title, **TITLE_FONT)
     ax.set_xlabel("Epoch", **LABEL_FONT)
-    ax.set_ylabel("Test Loss", **LABEL_FONT)
+    ax.set_ylabel("Train Loss", **LABEL_FONT)
+
+    # --- Compact Legend ---
     ax.legend(
-        prop={'family': 'sans-serif', 'size': 9},
-        loc='upper center',
-        bbox_to_anchor=(0.5, 1.15),
-        ncol=3,
-        handletextpad=0.5,
-        columnspacing=1.0,
+        prop={'family': 'sans-serif', 'size': 7},  # smaller font
+        loc='upper right',
+        bbox_to_anchor=(1.0, 0.98),  # closer to the box
+        ncol=2,
+        handletextpad=0.2,      # tighter spacing
+        columnspacing=0.6,      # narrower columns
+        borderpad=0.2,          # tighter legend frame padding
+        labelspacing=0.2        # tighter spacing between legend items
     )
 
     # --- Ticks ---
@@ -62,6 +67,7 @@ def plot_test_loss(model_dict):
 
     plt.tight_layout()
     plt.show()
+
 
 def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1_prog", col2="test_acc_h6_prog", baseline=None):
     """Plot mean ± std accuracy for H1 vs H6 across models, with optional baseline markers."""
