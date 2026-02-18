@@ -2,8 +2,7 @@
 import matplotlib.pyplot as plt
 
 # Your updated palette
-COLORS = ["#4b6bea", "#d43628",  "#a0a0a0", "#4daea1", "#e6a95b", "#b58fe6"]
-
+COLORS = ["#4b6bea", "#d43628", "#4daea1",  "#ff7e73",  "#85dd6f", "#e6a95b", "#fc8cf2","#9498a0"]
 THEME = {
     'colors': {
         1: COLORS[0],       # Horizon 1 (Bold Red)
@@ -60,7 +59,13 @@ def apply_base_style(ax):
         for text in leg.get_texts():
             text.set_fontfamily(THEME['fonts']['legend']['family'])
             text.set_fontsize(THEME['fonts']['legend']['size'])
-        leg.get_frame().set_linewidth(0)
-        leg.get_frame().set_alpha(0)
+        # leg.get_frame().set_linewidth(0)
+        # leg.get_frame().set_alpha(0)
+
+        frame = leg.get_frame()
+        frame.set_linewidth(0.5)                      # Visible border
+        frame.set_edgecolor(THEME['colors']['spine']) # Match the dark axis color
+        frame.set_facecolor('white')                  # Solid background
+        frame.set_alpha(0.5)                          # Slightly translucent
         
     return ax

@@ -1,76 +1,67 @@
 import matplotlib.pyplot as plt
-import seaborn as sns
 import numpy as np
-
-# ============================================================
-#  Global Plotting Styles
-# ============================================================
-
-# --- Shared color palette (color-blind friendly & print-safe) ---
-PLOT_COLORS = ["#ff7e73", "#6eb8f0",  "#a0a0a0", "#4daea1", "#e6a95b", "#b58fe6"]
-
-# --- Global Seaborn Theme ---
-sns.set_theme(style="white", font="serif", context="paper", font_scale=1.1)
-sns.set_palette(sns.color_palette(PLOT_COLORS))
-
-# --- Shared Figure Style Parameters ---
-SPINE_COLOR = "#f0f0f0"
-GRID_COLOR = "#f0f0f0"
-LABEL_FONT = {'fontfamily': 'sans-serif', 'fontsize': 9}
-TITLE_FONT = {'fontfamily': 'serif', 'fontsize': 11}
-TICK_FONT_FAMILY = 'sans-serif'
-TICK_FONT_SIZE = 9
-
-# ============================================================
-#  Plotting Functions
-# ============================================================
+import scipy.stats as stats # added for later use in error bars
+from styles import THEME, apply_base_style, COLORS
+from matplotlib.ticker import MaxNLocator
 
 def plot_loss(model_dict, title="Train Loss Progression"):
-    """Plot Train loss progression for each model."""
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    """
+    Plot Train loss progression for each model using the style.py system.
+    """
+    # We increase the figure size slightly to give the larger fonts breathing room
+    fig, ax = plt.subplots(figsize=(12, 7))
 
     # --- Plot each model’s loss curve ---
-    for model_name, data in model_dict.items():
+    for i, (model_name, data) in enumerate(model_dict.items()):
         loss_prog = data["test_loss_prog"]
         final_epoch = data["final_epoch"]
-        ax.plot(range(final_epoch), loss_prog, label=model_name, linewidth=1.2)
+        
+        # Use the updated color palette from styles.py
+        color = COLORS[i % len(COLORS)]
+        
+        ax.plot(range(final_epoch), loss_prog, 
+                label=model_name, 
+                linewidth=2, 
+                color=color)
 
-    # --- Title + Axis Labels ---
-    ax.set_title(title, **TITLE_FONT)
-    ax.set_xlabel("Epoch", **LABEL_FONT)
-    ax.set_ylabel("Train Loss", **LABEL_FONT)
+    # --- Set Text Labels ---
+    # Note: apply_base_style will handle the actual font family, size, and bolding
+    ax.set_title(title)
+    ax.set_xlabel("Epoch")
+    ax.set_ylabel("Train Loss")
 
-    # --- Compact Legend ---
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
+
+    # --- Setup Legend ---
+    # We maintain the original compact layout, but the style function
+    # will automatically scale the font to size 16 and remove the frame.
     ax.legend(
-        prop={'family': 'sans-serif', 'size': 7},  # smaller font
+        frameon=True,
         loc='upper right',
-        bbox_to_anchor=(1.0, 0.98),  # closer to the box
+        bbox_to_anchor=(1.0, 0.98),
         ncol=2,
-        handletextpad=0.2,      # tighter spacing
-        columnspacing=0.6,      # narrower columns
-        borderpad=0.2,          # tighter legend frame padding
-        labelspacing=0.2        # tighter spacing between legend items
+        handletextpad=0.6,
+        columnspacing=0.6,
+        borderpad=0.6,
+        labelspacing=0.6
     )
 
-    # --- Ticks ---
-    for label in ax.get_yticklabels() + ax.get_xticklabels():
-        label.set_fontfamily(TICK_FONT_FAMILY)
-        label.set_fontsize(TICK_FONT_SIZE)
+    # --- Apply Global Visual DNA ---
+    # This single call replaces all the manual tick and spine loops
+    apply_base_style(ax)
 
-    # --- Box + Grid styling ---
-    for spine in ax.spines.values():
-        spine.set_color(SPINE_COLOR)
-        spine.set_linewidth(0.8)
-
-    ax.grid(True, axis='x', color=GRID_COLOR, linestyle='-', linewidth=0.6)
+    # --- Grid Styling ---
+    # We keep the grid for diagnostic plots, but use the theme's spine color
+    ax.grid(True, axis='x', color=THEME['colors']['spine'], linestyle='-', linewidth=0.6, alpha=0.15)
     ax.grid(False, axis='y')
 
     plt.tight_layout()
     plt.show()
 
-
 def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1_prog", col2="test_acc_h6_prog", baseline=None):
-    """Plot mean ± std accuracy for H1 vs H6 across models, with optional baseline markers."""
+    """
+    Plot mean ± std accuracy for H1 vs H6 across models with updated styles.
+    """
     h1_means, h6_means = [], []
     h1_stds, h6_stds = [], []
 
@@ -87,118 +78,105 @@ def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1
     y_pos = np.arange(len(names))
 
     # --- Figure setup ---
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    # Increased width to 12 to accommodate the larger fonts and labels
+    fig, ax = plt.subplots(figsize=(12, 8))
+
+    # --- Colors from THEME ---
+    # Mapping H1 to your Red and H6 to your Blue from styles.py
+    color_h1 = THEME['colors'][1]
+    color_h6 = THEME['colors'][6]
 
     # --- Errorbar plots ---
+    # H6 (Blue) and H1 (Red) with slightly thicker lines and larger markers
     ax.errorbar(h6_means, y_pos + 0.1, xerr=h6_stds, fmt='o',
-                color=PLOT_COLORS[1], label="H6", capsize=5, linewidth=1.0)
+                color=color_h6, label="H6", capsize=8, linewidth=3, markersize=12)
 
     ax.errorbar(h1_means, y_pos - 0.1, xerr=h1_stds, fmt='o',
-                color=PLOT_COLORS[0], label="H1", capsize=5, linewidth=1.0)
+                color=color_h1, label="H1", capsize=8, linewidth=3, markersize=12)
 
-    # --- Baseline markers (if provided) ---
+    # --- Baseline markers (Optional dashed lines) ---
     if baseline is not None and len(baseline) == 2:
         h1_base, h6_base = baseline
-        ax.axvline(x=h1_base, color=PLOT_COLORS[0], linestyle="--", alpha=0.6, linewidth=1.2)
-        ax.axvline(x=h6_base, color=PLOT_COLORS[1], linestyle="--", alpha=0.6, linewidth=1.2)
-        # optional labels on top
-        # ax.text(h1_base, y_pos[-1] + 0.7, f"H1 baseline={h1_base:.2f}", color=PLOT_COLORS[0],
-        #         fontsize=7, ha="center", va="bottom", alpha=0.8)
-        # ax.text(h6_base, y_pos[-1] + 0.7, f"H6 baseline={h6_base:.2f}", color=PLOT_COLORS[1],
-        #         fontsize=7, ha="center", va="bottom", alpha=0.8)
-
-        ax.text(h1_base - 0.005, y_pos[-1] - 0.8, f"H1 baseline={h1_base:.2f}", 
-                    color=PLOT_COLORS[0], fontsize=9, rotation=270, 
-                    ha="left", va="bottom", alpha=0.8)
+        ax.axvline(x=h1_base, color=color_h1, linestyle="--", alpha=0.6, linewidth=3)
+        ax.axvline(x=h6_base, color=color_h6, linestyle="--", alpha=0.6, linewidth=3)
+        
+        # Baseline text labels
+        ax.text(h1_base - 0.001, y_pos[-1] - 1.4, f"H1 baseline={h1_base:.2f}", 
+                color=color_h1, fontsize=THEME['fonts']['label']['size'], rotation=270, 
+                ha="right", va="bottom", alpha=0.8)
             
-        ax.text(h6_base - 0.005, y_pos[-1] - 0.8, f"H6 baseline={h6_base:.2f}", 
-                    color=PLOT_COLORS[1], fontsize=9, rotation=270, 
-                    ha="left", va="bottom", alpha=0.8)
+        ax.text(h6_base - 0.001, y_pos[-1] - 1.4, f"H6 baseline={h6_base:.2f}", 
+                color=color_h6, fontsize=THEME['fonts']['label']['size'], rotation=270, 
+                ha="right", va="bottom", alpha=0.8)
 
-    # --- Labels and Legend ---
-    ax.set_title(f"{title}", **TITLE_FONT)
-    ax.set_xlabel(xlabel, **LABEL_FONT)
+    # --- Labels and Title ---
+    ax.set_title(title, pad=40)
+    ax.set_xlabel(xlabel, labelpad=15)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(names)
-    ax.legend(
-        prop={'family': 'sans-serif', 'size': 7},
-        loc='lower right',
-        bbox_to_anchor=(1.0, 1.0),
-        ncol=2,
-        handletextpad=0.5,
-        columnspacing=1.0
-    )
+
+    # --- Legend ---
+    # Placed above the box for a clean, academic look
+    ax.legend(loc='lower right', bbox_to_anchor=(1.0, 1.02), ncol=2,
+        frameon=True, handletextpad=0.5, columnspacing=1.0, borderpad=0.6)
 
     ax.invert_yaxis()
 
-    # --- Sans-serif tick labels ---
-    for label in ax.get_yticklabels() + ax.get_xticklabels():
-        label.set_fontfamily(TICK_FONT_FAMILY)
-        label.set_fontsize(TICK_FONT_SIZE)
+    # --- Apply THEME Visual DNA ---
+    # This automatically handles the Bold Title, Large Labels, and Dark Spines
+    apply_base_style(ax)
 
-    # --- Box + Grid styling ---
-    for spine in ax.spines.values():
-        spine.set_color(SPINE_COLOR)
-        spine.set_linewidth(0.8)
-
-    ax.grid(True, axis='x', color=GRID_COLOR, linestyle='-', linewidth=0.6)
+    # --- Grid styling ---
+    ax.grid(True, axis='x', color=THEME['colors']['spine'], linestyle='-', linewidth=0.6, alpha=0.2)
     ax.grid(False, axis='y')
 
     plt.tight_layout()
     plt.show()
 
-
 def plot_h6_stepwise(history, model_name="Seq2SeqGRU"):
     """
-    Plot stepwise accuracy for H6 (c4–c9) vs overall H1 accuracy
-    in the same visual style as other paper-quality plots.
+    Plot stepwise accuracy for H6 vs H1 reference using updated styles.
     """
-    PLOT_COLORS = ["#6eb8f0", "#ff7e73"]  # H6 line, H1 reference line
+    # 1. Pull colors and line weights from THEME
+    color_h6 = THEME['colors'][6] 
+    color_h1 = THEME['colors'][1]
+    line_width = THEME['lines']['model_width']
+    
     # --- Data prep ---
-    final_acc_h6 = history["h6_step_acc"][-1]   # e.g., [acc_c4,...,acc_c9]
-    final_acc_h1 = history["h1_acc"][-1]        # single value
+    final_acc_h6 = history["h6_step_acc"][-1]   
+    final_acc_h1 = history["h1_acc"][-1]        
     trials = [f"c{i}" for i in range(4, 10)]
 
     # --- Figure ---
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    fig, ax = plt.subplots(figsize=(12, 8))
 
-    # H6 line
+    # H6 line (Blue) - Stepwise progression
     ax.plot(trials, final_acc_h6, marker="o", linestyle="-",
-            color=PLOT_COLORS[0], label="H6", linewidth=1.2, markersize=4)
+            color=color_h6, label="H6", linewidth=3, markersize=6)
 
-    # H1 reference line
-    ax.axhline(y=final_acc_h1, color=PLOT_COLORS[1],
-               linestyle="--", label="H1", linewidth=1.0)
+    # H1 reference line (Red) - Flat baseline
+    ax.axhline(y=final_acc_h1, color=color_h1,
+               linestyle="--", label="H1", linewidth=3)
 
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
     # --- Labels and Title ---
-    ax.set_xlabel("Game Trial", fontfamily="sans-serif", fontsize=8)
-    ax.set_ylabel("Accuracy", fontfamily="sans-serif", fontsize=8)
-    ax.set_title(f"H6 trial progression", fontfamily="serif", fontsize=11, pad=12)
+    ax.set_title(f"H6 trial progression", pad=30)
+    ax.set_xlabel("Game Trial", labelpad=10)
+    ax.set_ylabel("Accuracy", labelpad=15)
 
-    # --- Legend (top-right, above plot box) ---
-    ax.legend(
-        prop={'family': 'sans-serif', 'size': 7},
-        loc='lower right',          # anchor the legend’s lower-right corner
-        bbox_to_anchor=(1.0, 1.05), # place just above the top-right corner
-        ncol=2,
-        handletextpad=0.5,
-        columnspacing=1.0
-    )
+    # --- Legend ---
+    # Inherits borderpad=0.8 and frameon=True from styles.py rcParams
+    ax.legend(loc='lower right', bbox_to_anchor=(1.0, 1.05), ncol=2)
 
-    # --- Ticks ---
-    for label in ax.get_xticklabels() + ax.get_yticklabels():
-        label.set_fontfamily("sans-serif")
-        label.set_fontsize(8)
+    # --- Apply Global Visual DNA ---
+    # Styles the semibold title, large labels, and the boxed legend border/font
+    apply_base_style(ax)
 
-    # --- Styling ---
-    for spine in ax.spines.values():
-        spine.set_color(SPINE_COLOR)
-        spine.set_linewidth(0.8)
-
-    ax.grid(True, axis="y", color=GRID_COLOR, linestyle="-", linewidth=0.6)
-    ax.grid(False, axis="x")
-
+    # --- Final Polish ---
     ax.set_ylim(0.7, 0.85)
+    
+    ax.yaxis.set_major_locator(MaxNLocator(integer=True, nbins=6))
+    ax.grid(True, axis="y", color=THEME['colors']['spine'], linestyle="-", linewidth=0.6, alpha=0.15)
 
     plt.tight_layout()
     plt.show()
