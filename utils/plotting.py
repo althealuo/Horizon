@@ -16,10 +16,10 @@ sns.set_palette(sns.color_palette(PLOT_COLORS))
 # --- Shared Figure Style Parameters ---
 SPINE_COLOR = "#f0f0f0"
 GRID_COLOR = "#f0f0f0"
-LABEL_FONT = {'fontfamily': 'sans-serif', 'fontsize': 8}
-TITLE_FONT = {'fontfamily': 'serif', 'fontsize': 10}
+LABEL_FONT = {'fontfamily': 'sans-serif', 'fontsize': 9}
+TITLE_FONT = {'fontfamily': 'serif', 'fontsize': 11}
 TICK_FONT_FAMILY = 'sans-serif'
-TICK_FONT_SIZE = 8
+TICK_FONT_SIZE = 9
 
 # ============================================================
 #  Plotting Functions
@@ -31,7 +31,7 @@ def plot_loss(model_dict, title="Train Loss Progression"):
 
     # --- Plot each model’s loss curve ---
     for model_name, data in model_dict.items():
-        loss_prog = data["train_loss_prog"]
+        loss_prog = data["test_loss_prog"]
         final_epoch = data["final_epoch"]
         ax.plot(range(final_epoch), loss_prog, label=model_name, linewidth=1.2)
 
@@ -90,10 +90,11 @@ def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
     # --- Errorbar plots ---
-    ax.errorbar(h1_means, y_pos - 0.1, xerr=h1_stds, fmt='o',
-                color=PLOT_COLORS[0], label="H1", capsize=3, linewidth=1.0)
     ax.errorbar(h6_means, y_pos + 0.1, xerr=h6_stds, fmt='o',
-                color=PLOT_COLORS[1], label="H6", capsize=3, linewidth=1.0)
+                color=PLOT_COLORS[1], label="H6", capsize=5, linewidth=1.0)
+
+    ax.errorbar(h1_means, y_pos - 0.1, xerr=h1_stds, fmt='o',
+                color=PLOT_COLORS[0], label="H1", capsize=5, linewidth=1.0)
 
     # --- Baseline markers (if provided) ---
     if baseline is not None and len(baseline) == 2:
@@ -101,10 +102,18 @@ def plot_error_bars(model_dict, title=None, xlabel="Accuracy", col1="test_acc_h1
         ax.axvline(x=h1_base, color=PLOT_COLORS[0], linestyle="--", alpha=0.6, linewidth=1.2)
         ax.axvline(x=h6_base, color=PLOT_COLORS[1], linestyle="--", alpha=0.6, linewidth=1.2)
         # optional labels on top
-        ax.text(h1_base, y_pos[-1] + 0.7, f"H1 baseline={h1_base:.2f}", color=PLOT_COLORS[0],
-                fontsize=7, ha="center", va="bottom", alpha=0.8)
-        ax.text(h6_base, y_pos[-1] + 0.7, f"H6 baseline={h6_base:.2f}", color=PLOT_COLORS[1],
-                fontsize=7, ha="center", va="bottom", alpha=0.8)
+        # ax.text(h1_base, y_pos[-1] + 0.7, f"H1 baseline={h1_base:.2f}", color=PLOT_COLORS[0],
+        #         fontsize=7, ha="center", va="bottom", alpha=0.8)
+        # ax.text(h6_base, y_pos[-1] + 0.7, f"H6 baseline={h6_base:.2f}", color=PLOT_COLORS[1],
+        #         fontsize=7, ha="center", va="bottom", alpha=0.8)
+
+        ax.text(h1_base - 0.005, y_pos[-1] - 0.8, f"H1 baseline={h1_base:.2f}", 
+                    color=PLOT_COLORS[0], fontsize=9, rotation=270, 
+                    ha="left", va="bottom", alpha=0.8)
+            
+        ax.text(h6_base - 0.005, y_pos[-1] - 0.8, f"H6 baseline={h6_base:.2f}", 
+                    color=PLOT_COLORS[1], fontsize=9, rotation=270, 
+                    ha="left", va="bottom", alpha=0.8)
 
     # --- Labels and Legend ---
     ax.set_title(f"{title}", **TITLE_FONT)

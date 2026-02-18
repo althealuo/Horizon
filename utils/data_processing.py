@@ -22,7 +22,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.benchmark = False
 
 def get_df():
-    df = pd.read_csv("./data/my_horizon_data_all.csv", dtype={"subject": str})
+    df = pd.read_csv("./data/my_horizon_data_all_filenames.csv", dtype={"subject": str})
     return df
 
 def get_dataloaders(X_seq, X_static, y, SEQ_LEN=2, BATCH_SIZE=32, TIME_STEPS=4):
